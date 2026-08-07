@@ -1,0 +1,159 @@
+name: Build Kernel
+run-name: ${{ inputs.releases }}
+
+permissions:
+  contents: read
+  actions: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      ksu_type:
+        description: "Loại root:"
+        required: true
+        type: choice
+        options:
+          - 'ReSukiSU'
+          - 'KernelSU'
+        default: 'ReSukiSU'
+
+      ksu_ref:
+        description: "Nhánh root"
+        required: false
+        default: ''
+
+      manager_type:
+        description: "Loại Manager APK:"
+        required: true
+        type: choice
+        options:
+          - 'Normal'
+          - 'Spoofed'
+        default: 'Normal'
+
+      releases:
+        description: "Phiên bản kernel:"
+        required: true
+        type: choice
+        options:
+          - '6.6.98'
+          - '6.6.118'
+        default: '6.6.118'
+
+      custom_kernel_suffix:
+        description: "Kernel suffix"
+        required: false
+        default: ''
+
+      custom_kernel_time:
+        description: "Build timestamp"
+        required: false
+        default: ''
+
+      kernel_module_impl:
+        description: "Kernel module implementation"
+        required: true
+        type: choice
+        options:
+          - 'N/A'
+          - 'KPM'
+          - 'KPN'
+        default: 'N/A'
+
+      enable_netfilter:
+        description: "Netfilter support"
+        required: false
+        default: false
+        type: boolean
+
+      enable_bbr_ecn:
+        description: "BBR+ECN support"
+        required: false
+        default: false
+        type: boolean
+
+      enable_unicode_bypass:
+        description: "Fix Unicode invisible character bypass"
+        required: false
+        default: false
+        type: boolean
+
+      enable_Adios:
+        description: "ADIOS I/O scheduler support"
+        required: false
+        default: false
+        type: boolean
+
+      enable_susfs:
+        description: "SUSFS support"
+        required: false
+        default: false
+        type: boolean
+
+      enable_susfs_dev:
+        description: "SUSFS-dev support"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  resolve_release:
+    name: Resolve release
+    runs-on: ubuntu-latest
+    outputs:
+      kernel_version: ${{ steps.release.outputs.kernel_version }}
+      default_suffix: ${{ steps.release.outputs.default_suffix }}
+      default_kernel_time: ${{ steps.release.outputs.default_kernel_time }}
+    steps:
+      - name: Resolve release defaults
+        id: release
+        env:
+          KERNEL_RELEASE: ${{ inputs.releases }}
+        run: |
+          set -euo pipefail
+
+          case "$KERNEL_RELEASE" in
+            "6.6.89")
+              kernel_version='6.6.89'
+              default_suffix='-android15-8-g14220ae4ce65-ab13680582-4k'
+              default_kernel_time='Mon Jun 23 07:30:57 UTC 2025'
+              ;;
+            "6.6.118")
+              kernel_version='6.6.118'
+              default_suffix='-android15-8-g350f378eb496-ab14943902-4k'
+              default_kernel_time='Thu Feb 26 02:40:50 UTC 2026'
+              ;;
+            *)
+              echo "::error::Unsupported release: $KERNEL_RELEASE"
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "kernel_version=$kernel_version"
+            echo "default_suffix=$default_suffix"
+            echo "default_kernel_time=$default_kernel_time"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ inputs.releases }}
+    needs: resolve_release
+    uses: ./.github/workflows/start.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      ksu_ref: ${{ inputs.ksu_ref }}
+      manager_type: ${{ inputs.manager_type }}
+      build_target: Build_Kernel
+      kernel_version: ${{ needs.resolve_release.outputs.kernel_version }}
+      default_suffix: ${{ needs.resolve_release.outputs.default_suffix }}
+      default_kernel_time: ${{ needs.resolve_release.outputs.default_kernel_time }}
+      custom_kernel_suffix: ${{ inputs.custom_kernel_suffix }}
+      custom_kernel_time: ${{ inputs.custom_kernel_time }}
+      kernel_module_impl: ${{ inputs.kernel_module_impl }}
+      enable_netfilter: ${{ inputs.enable_netfilter }}
+      enable_bbr_ecn: ${{ inputs.enable_bbr_ecn }}
+      enable_unicode_bypass: ${{ inputs.enable_unicode_bypass }}
+      enable_Adios: ${{ inputs.enable_Adios }}
+      enable_susfs: ${{ inputs.enable_susfs }}
+      enable_susfs_dev: ${{ inputs.enable_susfs_dev }}
+    secrets: inherit
