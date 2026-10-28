@@ -13,9 +13,9 @@ on:
         required: true
         type: choice
         options:
-          - 'ReSukiSU'
+          - 'BakaSU'
           - 'KernelSU'
-        default: 'ReSukiSU'
+        default: 'BakaSU'
 
       ksu_ref:
         description: "Nhánh root"
