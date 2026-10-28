@@ -563,8 +563,8 @@ jobs:
                 echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
                 echo "KernelSU commit hash: $GIT_COMMIT_HASH"
                 ;;
-              "ReSukiSU")
-                KSU_SETUP_REPO="ReSukiSU/ReSukiSU"
+              "BakaSU")
+                KSU_SETUP_REPO="Baka-SU/BakaSU"
                 KSU_SETUP_REF="${KSU_CUSTOM_REF:-main}"
                 curl -LSs "https://raw.githubusercontent.com/${KSU_SETUP_REPO}/${KSU_SETUP_REF}/kernel/setup.sh" | bash -s "$KSU_SETUP_REF"
                 cd ./KernelSU
@@ -596,7 +596,7 @@ jobs:
           esac
 
           case "${{ env.KSU_TYPE }}" in
-            "ReSukiSU")
+            "BakaSU")
               MODE="workflow"
               REPO="${{ env.KSU_MANAGER_REPO }}"
               REF="${{ env.KSU_MANAGER_REF }}"
